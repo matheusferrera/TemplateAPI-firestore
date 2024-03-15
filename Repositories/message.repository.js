@@ -1,6 +1,6 @@
 const { initializeApp } = require("firebase/app");
 const { getFirestore } = require("firebase/firestore")
-const { collection, getDocs, doc, setDoc, getDoc, updateDoc } = require("firebase/firestore");
+const { collection, getDocs, doc, setDoc, addDoc, getDoc, updateDoc } = require("firebase/firestore");
 require('dotenv').config();
 
 
@@ -18,59 +18,58 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function getMessage(idClient, idMessage) {
+
+async function getMessage(idUser, idClient, idMessage) {
+
+  if (!idUser, !idClient) {
+    return { status: 404, error: "A requisicao necessita de um idClient e um idUser" }
+  }
   let response = {}
   try {
-    if(!idClient && !idMessage){ //Todas as mensagens 
-      const querySnapshot = await getDocs(collection(db, "user1"));
-      querySnapshot.forEach((doc) => {
-        response[doc.id] = doc.data()
-      });
-    } 
 
-    if(idClient && !idMessage){ //todas as mensagem enviadas a idClient
-      const docRef = doc(db, "user1", idClient); 
-      const docSnapshot = await getDoc(docRef);
-      if (docSnapshot.exists()) {
-        response[docSnapshot.id] = docSnapshot.data()
-      } else {
-        return { status: 404, error: "Nao foi encontrada mensagem com esse idClient" };
-      }
-    } 
+    const docRef = doc(db, "messages", idUser);
+    if (!((await getDoc(docRef)).exists())) {
+      return { status: 404, error: "Nao existe o idUser" }
+    }
 
-    if(idClient && idMessage){ //Somente a mensagem idMessage enviada a idClient
-      const docRef = doc(db, "user1", idClient); 
-      const docSnapshot = await getDoc(docRef);
-      if (docSnapshot.exists()) {
-        const respDb = docSnapshot.data()
-        if (respDb.hasOwnProperty(idMessage)){
-          response[docSnapshot.id] = docSnapshot.data()
-        } else {
-          return { status: 404, error: "Nao foi encontrada mensagem com esse idMessage" };
-        }
-        
-      } else {
-        return { status: 404, error: "Nao foi encontrada mensagem com esse idClient" };
-      }
-    } 
-    return response
+    const colecaoRef = collection(docRef, idClient);
+    const querySnapshot = await getDocs(colecaoRef);
+    querySnapshot.forEach((doc) => {
+      response[doc.id] = doc.data()
+    });
+
+    if(Object.keys(response).length == 0){
+      return { status: 400, error: "idUser nunca enviou mensagem para o idClient" }
+    }
+
+    return response;
+
+
   } catch (error) {
     console.error("Erro ao obter documentos:", error);
   }
 }
 
-async function setMessage(idClient, idMessage, objMessage) { //Se possuir no DB ele somente altera os campos e se nao possuir cria um novo obj
-  
-  
+
+async function setMessage(idUser, idClient, idMessage, objMessage) { //Se possuir no DB ele somente altera os campos e se nao possuir cria um novo obj
+
+  if (!idUser, !idClient, !idMessage) {
+    return { status: 404, error: "A requisicao necessita de um idClient, idUser e idMessage" }
+  }
+
   try {
-    const docRef = doc(db, "user1", idClient);
-    let objDb = {}
-    objDb[+new Date()] = objMessage
-    await setDoc(docRef, objDb, { merge: true });
-   
+    const docRef = doc(db, "messages", idUser);
+    const colecaoRef = collection(docRef, idClient);
+    const docRefMsg = doc(colecaoRef, idMessage)
+
+
+    const addDocResp = await setDoc(docRefMsg, objMessage, { merge: true });
+    const resp = await getDoc(docRefMsg)
+    return resp.data()
+
   } catch (err) {
-   console.log(err)
-  } 
+    console.log(err)
+  }
 }
 
 

@@ -1,15 +1,14 @@
-const messageService = require("../Services/message.service.js");
+const flowService = require("../Services/flow.service.js");
 
 
-async function getMessage(req, res) {
+async function getFlowSchema(req, res) {
     try {
         //Extração das variaveis
         const idUser = req.params.idUser
-        const idClient = req.params.idClient
-        const idMessage = req.params.idMessage
+        const idFlow = req.params.idFlow
 
         //Chamada do service
-        const data = await messageService.getMessage(idUser, idClient, idMessage);
+        const data = await flowService.getFlowSchema(idUser, idFlow);
 
         //Correcao de erros
         if (data.error) {
@@ -22,16 +21,15 @@ async function getMessage(req, res) {
     }
 }
 
-async function setMessage(req, res) {
+async function setFlowSchema(req, res) {
     try {
         //Extração das variaveis
-        const objMessage = req.body
+        const objFlow = req.body
         const idUser = req.params.idUser
-        const idMessage = req.params.idMessage
-        const idClient = req.params.idClient
+        const idFlow = req.params.idFlow
 
         //Chamada do service
-        const data = await messageService.setMessage(idUser, idClient, idMessage, objMessage);
+        const data = await flowService.setFlowSchema(idUser, idFlow, objFlow);
 
          //Correcao de erros
          if (data.error) {
@@ -47,5 +45,5 @@ async function setMessage(req, res) {
 
 
 
-module.exports = { getMessage, setMessage }
+module.exports = { getFlowSchema, setFlowSchema }
 
