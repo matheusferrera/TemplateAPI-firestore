@@ -17,43 +17,30 @@ async function sendTextMessage(message, targetPhone) {
     messaging_product: "whatsapp",
     recipient_type: "individual",
     to: targetPhone,
-    type: "template",
-    template: {
-          "name": "teste_ofc",
-          "language": {
-              "code": "pt_BR",
-              "policy": "deterministic"
-          },
-          "components": [{
-              "type": "body",
-              "parameters": [
-                  {
-                      "type": "text",
-                      "text": "your-text-string"
-                  },
-              ]
-          }]
-      }
+    type: "text",
+    text: {
+      preview_url: false,
+      body: message,
+    },
   }
   
     let objDb = {
         status: "delivered",
-          timeStamp: new Date().getTime(),
-          content: message
+        timeStamp: new Date().getTime(),
+        content: message,
+        type: "text"
     }
   
   try {
-    console.log("TENTANDO O FETCH!")
     const response = await axios.post(url, data, { headers });
-    console.log("RESPONSE -  ", response)
-    console.log("RESPONSE DATA -  ", response.data)
-     await messageRepository.setMessage("user1",targetPhone, response.data.messages[0].id, objDb)
-    return response
+    const respSet = await messageRepository.setMessage("user1", response.data.contacts[0].wa_id, response.data.messages[0].id, objDb)
+    return respSet
   } catch (e) {
-    console.log("ERRO -> ", e)
-    throw("======> [MessageService/sendTextMessage] -> ", e)
+    return e
+
   }
 }
 
 
-sendTextMessage("testando", "556192045128")
+
+module.exports = { sendTextMessage }

@@ -40,16 +40,12 @@ async function  checkMessage(idUser, idClient, objMessage) {
       return { status: 200, error: "Nao existe flows ativos para o idClient" }
     }
 
-    console.log(dataFlowsActive[idClient])
-
     for (const idFlow in dataFlowsActive[idClient]) {
 
       const currentNode = dataFlowsActive[idClient][idFlow].currentNode;
       const nextNodes = dataFlowsActive[idClient][idFlow].nextNodes;
       let response = {}
-        console.log("IDFLOWS -> ", idFlow)
       for (const nextNodeMessage in nextNodes) {
-        console.log("NEXT NODE -> ", nextNodeMessage)
         if (limpaString(nextNodeMessage) === limpaString(objMessage.content)) {
           response = {
             idFlow: idFlow,

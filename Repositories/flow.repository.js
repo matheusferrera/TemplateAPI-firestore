@@ -3,6 +3,7 @@ const { getFirestore } = require("firebase/firestore")
 const { collection, getDocs, doc, setDoc, addDoc, getDoc, updateDoc } = require("firebase/firestore");
 require('dotenv').config();
 const _ = require('lodash');
+const wppApi = require("./wppAPI.repository")
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -35,10 +36,13 @@ async function activeFlow(idUser, idFlow, idClients) {
       nextNodes: respSchema.nextNodes
     }
 
+    console.log("RES{PNSE _ ", response)
+
     response.currentNode.timestamp = Date.now()
 
     const respSet = await setFlowActive("user1", idFlow, response)
-    return respSet
+
+    return response
   } catch (error) {
     console.error("Erro ao ativar fluxo:", error);
     return { status: 500, error: "Erro ao ativar fluxo" };
@@ -162,11 +166,11 @@ async function setFlowActive(idUser, idFlow, objFlow) {
 
     allDocs = await querySnapshot.data()
 
-    objFlow.idClients.forEach(idClient => {
+    objFlow.idClients.forEach(async idClient => {
       allDocs[idClient] = {}
       allDocs[idClient][idFlow] = {...objFlow}
       delete allDocs[idClient][idFlow].idClients;
-   
+      const respWpp =  await wppApi.sendTextMessage(objFlow.currentNode.content, idClient)
     });
 
     await setDoc(docRef, allDocs);

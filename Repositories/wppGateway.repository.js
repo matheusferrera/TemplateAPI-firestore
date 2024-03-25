@@ -3,6 +3,7 @@ const { getFirestore } = require("firebase/firestore")
 const { collection, getDocs, doc, setDoc, addDoc, getDoc, updateDoc } = require("firebase/firestore");
 require('dotenv').config();
 const checkerRepository = require("./checker.repository")
+const flowRepository = require("./flow.repository")
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -24,12 +25,21 @@ async function reciveMessage(idUser, idClient, objMessage) {
   if (!idUser || !idClient || Object.keys(objMessage).length === 0) {
     return { status: 404, error: "A requisicao necessita de um idClient, idUser e objMessage" }
   }
-
+  let response = {}
   try {
     const checkMessage = await checkerRepository.checkMessage(idUser, idClient, objMessage)
 
+    if (checkMessage.error){
+      return checkMessage
+    }
+
+    response.reciveMessage = objMessage
+
+  const flow = await flowRepository.setNextNodeFlowActive("user1", idClient, checkMessage.idFlow, checkMessage.idNode)
+
+  response.nextNode = flow
     
-    return checkMessage
+    return response
     
 
   } catch (error) {
