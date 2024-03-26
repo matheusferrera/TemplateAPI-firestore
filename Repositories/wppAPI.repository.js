@@ -11,30 +11,49 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-async function sendTextMessage(message, targetPhone) {
+async function sendWppMessage(type, content, targetPhone) {
   
-  const data = {
-    messaging_product: "whatsapp",
-    recipient_type: "individual",
-    to: targetPhone,
-    type: "text",
-    text: {
-      preview_url: false,
-      body: message,
-    },
+  let data;
+  
+  if (type === 'text') {
+    data = {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: targetPhone,
+      type: type,
+      text: {
+        preview_url: false,
+        body: content,
+      },
+    };
+  } else if (type === 'template') {
+    data = {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: targetPhone,
+      type: type,
+      template: {
+        name: content,
+        language: {
+          code: "pt_BR"
+        }
+      }
+    };
+  } else {
+    throw new Error('Invalid message type.');
   }
   
     let objDb = {
         status: "delivered",
         timeStamp: new Date().getTime(),
-        content: message,
-        type: "text"
+        content: content,
+        type: type
     }
   
   try {
     const response = await axios.post(url, data, { headers });
     const respSet = await messageRepository.setMessage("user1", response.data.contacts[0].wa_id, response.data.messages[0].id, objDb)
-    return respSet
+    return response
   } catch (e) {
     return e
 
@@ -43,4 +62,4 @@ async function sendTextMessage(message, targetPhone) {
 
 
 
-module.exports = { sendTextMessage }
+module.exports = { sendWppMessage }

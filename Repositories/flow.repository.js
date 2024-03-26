@@ -28,15 +28,27 @@ async function activeFlow(idUser, idFlow, idClients) {
 
   try {
   
-    const respSchema = await setFlowSchema(idUser,idFlow, {"ativo": true})
+    const respSchema = await getFlowSchema(idUser,idFlow)
 
-    const response = {
-      idClients: idClients,
+    let response = {
+      idClients: [],
       currentNode: respSchema.initialNode,
       nextNodes: respSchema.nextNodes
     }
 
-    console.log("RES{PNSE _ ", response)
+    const initialNode = respSchema.initialNode
+
+    console.log("initialNode - ", initialNode)
+
+    for (const idClient of idClients) {
+      // const respWpp =  await wppApi.sendWppMessage(initialNode.type, initialNode.content, idClient)
+      const respWpp =  await wppApi.sendWppMessage("template", "boas_vindas2", idClient)
+      console.log("WA - ", respWpp.data.contacts[0].wa_id)
+      const numeroWpp = respWpp.data.contacts[0].wa_id
+      console.log("NUMERO WPP - ", numeroWpp)
+      response.idClients.push(numeroWpp)
+    }
+
 
     response.currentNode.timestamp = Date.now()
 
@@ -170,7 +182,7 @@ async function setFlowActive(idUser, idFlow, objFlow) {
       allDocs[idClient] = {}
       allDocs[idClient][idFlow] = {...objFlow}
       delete allDocs[idClient][idFlow].idClients;
-      const respWpp =  await wppApi.sendTextMessage(objFlow.currentNode.content, idClient)
+      
     });
 
     await setDoc(docRef, allDocs);
