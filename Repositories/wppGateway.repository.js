@@ -4,6 +4,7 @@ const { collection, getDocs, doc, setDoc, addDoc, getDoc, updateDoc } = require(
 require('dotenv').config();
 const checkerRepository = require("./checker.repository")
 const flowRepository = require("./flow.repository")
+const messageRepository = require("./message.repository")
 
 const firebaseConfig = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -27,6 +28,17 @@ async function reciveMessage(idUser, idClient, objMessage) {
   }
   let response = {}
   try {
+    console.log("OBJ - ", objMessage)
+
+  let objMessageDb = {
+    content: objMessage.content,
+    timeStamp: Date.now(),
+    type: objMessage.type,
+    status: "recive"
+  } 
+
+  await messageRepository.setMessage(idUser, idClient, objMessage.idWpp, objMessageDb)
+
     const checkMessage = await checkerRepository.checkMessage(idUser, idClient, objMessage)
 
     if (checkMessage.error){
